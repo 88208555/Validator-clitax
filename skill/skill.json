@@ -1,0 +1,10 @@
+{
+  "description": "Validator 是技能链的交付前质量门禁——终审法官。三道防线（静态/动态/对抗）递进验证，黄金基准对抗大模型漂移，执行证据杜绝自报伪造，终审裁决分级放行（pass/pass-with-risk/blocked/incomplete）。所有正式判定由确定性引擎执行，模型只做辅助解释。调用顺序为 capabilities、intake、plan、validate-structure、security-scan、functional-verify、verdict。证据缺失时 verdict 最高只能 incomplete——宁可待定不可放水。发现问题自动路由到对应技能返工（blueprint/calctool/aimlock/swarm）。本技能面向真实交付：每一步都有输入、规则与失败面，禁止把加载中、超时或未知状态当成空成功。调用前必须先走 capabilities，再按 nextStep 前进；必填项未回答不得进入下一操作。日志只保存必要元数据，密钥不得写入公开页面。",
+  "displayName": "Validator",
+  "endpoint": "https://cli.tax/Xx9ZkQmW3p",
+  "method": "POST",
+  "name": "validator",
+  "type": "Skill",
+  "version": "v7.0.19",
+  "schemaVersion": "validator.skill.request/1.0"
+}
