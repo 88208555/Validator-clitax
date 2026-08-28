@@ -2,7 +2,7 @@
   "bin": {
     "cli-validator": "./cli.mjs"
   },
-  "description": "Validator skill installer for CLI.Tax: delivery quality gate with three defense lines.",
+  "description": "Validator skill installer for CLI.Tax: delivery quality gate with three defense lines and golden baseline testing.",
   "files": [
     "cli.mjs",
     "installer.mjs",
@@ -13,11 +13,10 @@
   ],
   "license": "UNLICENSED",
   "name": "cli-validator",
-  "private": false,
   "repository": {
     "type": "git",
     "url": "https://github.com/88208555/Validator-clitax.git"
   },
   "type": "module",
-  "version": "7.0.25"
+  "version": "7.0.28"
 }

@@ -5,6 +5,6 @@
   "method": "POST",
   "name": "validator",
   "type": "Skill",
-  "version": "v7.0.25",
+  "version": "v7.0.28",
   "schemaVersion": "validator.skill.request/1.0"
 }
