@@ -5,7 +5,7 @@ description: '交付前质量门禁：三道防线（静态/动态/对抗）递�
 
 # Validator
 
-Package version: v7.0.29
+Package version: v7.0.30
 
 Validator 是技能链最后一站，只消费冻结目标和真实执行证据；模型解释没有裁判权。
 
