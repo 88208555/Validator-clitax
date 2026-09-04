@@ -1,10 +1,11 @@
+import { publicBindSites } from "./validator-compliance.mjs";
 import { createHash, createPublicKey, verify as verifySignature } from "node:crypto";
 
 const REQ = "validator.skill.request/1.0";
 const RES = "validator.skill.response/1.0";
 const ERR = "validator.skill.error/1.0";
 const NAME = "validator";
-const COMPILER_VERSION = "v7.0.33";
+const COMPILER_VERSION = "v7.0.34";
 const CATALOG_SCHEMA = "cli.tax.skill-catalog/1.0";
 const RECEIPT_SCHEMA = "validator.execution-receipt/1.0";
 const VALIDATION_SUBJECT_SCHEMA = "validator.validation-subject/1.0";
@@ -417,7 +418,7 @@ function runStatic(requestId, operation, input) {
   }
   const template = requiredText(input, "template");
   if (template.error) return blocked(requestId, [template.error]);
-  const findings = files.value.flatMap((file) => text(file.content).includes("0.0.0.0") ? [finding("P1", "COMP-PORT", text(file.path), "Public bind requires review")] : []);
+  const findings = files.value.flatMap((file) => publicBindSites(text(file.path), text(file.content)).map((site) => finding("P1", "COMP-PORT", text(file.path), "Public bind requires review", site)));
   return ok(requestId, { findings, template: template.value, nextStep: { operation: "functional-verify", instruction: "Run frozen golden baseline." } });
 }
 function runFunctional(requestId, input) {

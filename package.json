@@ -3,13 +3,23 @@
     "cli-validator": "./cli.mjs"
   },
   "description": "Validator skill installer for CLI.Tax: delivery quality gate with three defense lines and golden baseline testing.",
+  "exports": {
+    "./local-runner": "./validator-local-runner.mjs",
+    "./runner-plan": "./validator-runner-plan.mjs",
+    "./runtime": "./validator-runtime.mjs"
+  },
   "files": [
     "cli.mjs",
     "installer.mjs",
     "broker.mjs",
     "README.md",
     "skill/SKILL.md",
-    "skill/skill.json"
+    "skill/skill.json",
+    "validator-runner-plan.mjs",
+    "validator-local-runner.mjs",
+    "validator-local-cli.mjs",
+    "validator-runtime.mjs",
+    "validator-compliance.mjs"
   ],
   "license": "UNLICENSED",
   "name": "cli-validator",
@@ -18,5 +28,5 @@
     "url": "https://github.com/88208555/Validator-clitax.git"
   },
   "type": "module",
-  "version": "7.0.33"
+  "version": "7.0.34"
 }
