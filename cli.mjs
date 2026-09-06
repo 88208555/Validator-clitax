@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { runBrainValidatorCli } from './brain-validator-plan.mjs'
 import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { dispatchOfficialSkillCli, runIntakeHandshake } from './installer.mjs'
@@ -11,10 +12,11 @@ const INTAKE_QUESTIONS = [
   { id: 'targetFiles', prompt: 'Files to validate (or "auto" to scan all).', required: false, example: 'auto' },
 ]
 
-if (process.argv[2] === 'local') await runValidatorLocalCli(process.argv.slice(3))
+if (process.argv[2] === 'brain') await runBrainValidatorCli(process.argv.slice(3))
+else if (process.argv[2] === 'local') await runValidatorLocalCli(process.argv.slice(3))
 else await dispatchOfficialSkillCli({
   packageRoot: dirname(fileURLToPath(import.meta.url)),
-  extraUsageLines: ['  cli-validator local capabilities', '  cli-validator local run-approved-plan < runner-input.json'],
+  extraUsageLines: ['  cli-validator brain prepare <repositoryRoot> <reportResponse.json>', '  cli-validator brain run <repositoryRoot> <runnerInput.json>', '  cli-validator local capabilities', '  cli-validator local run-approved-plan < runner-input.json'],
   runCommand: (context) => runIntakeHandshake(context, {
     questions: INTAKE_QUESTIONS,
     outputFile: 'VALIDATOR-REQUIREMENTS.json',

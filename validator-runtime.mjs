@@ -1,3 +1,4 @@
+import { brainRunnerContractSchema, validateBridgeContracts } from "./validator-brain-contract.mjs";
 import { publicBindSites } from "./validator-compliance.mjs";
 import { createHash, createPublicKey, verify as verifySignature } from "node:crypto";
 
@@ -5,7 +6,7 @@ const REQ = "validator.skill.request/1.0";
 const RES = "validator.skill.response/1.0";
 const ERR = "validator.skill.error/1.0";
 const NAME = "validator";
-const COMPILER_VERSION = "v7.0.34";
+const COMPILER_VERSION = "v7.0.35";
 const CATALOG_SCHEMA = "cli.tax.skill-catalog/1.0";
 const RECEIPT_SCHEMA = "validator.execution-receipt/1.0";
 const VALIDATION_SUBJECT_SCHEMA = "validator.validation-subject/1.0";
@@ -57,6 +58,7 @@ const baselineSchema = objectSchema({
   testsSha256: stringSchema({ pattern: SHA_PATTERN }),
 }, ["schemaVersion", "baselineId", "source", "version", "frozen", "frozenAt", "frozenBy", "testsSha256"]);
 const contractsSchema = objectSchema({
+  brain: brainRunnerContractSchema,
   aimlock: objectSchema({ goalId: stringSchema({ pattern: ID_PATTERN }),
     scopeContractSha256: stringSchema({ pattern: SHA_PATTERN }), snapshotSha256: stringSchema({ pattern: SHA_PATTERN }) },
   ["goalId", "scopeContractSha256", "snapshotSha256"]),
@@ -206,19 +208,7 @@ function readValidationSubject(value, entityRef) {
         && value.artifactSha256 !== validatorArtifactSubject(value.files)) findings.push(finding("P0", "VALIDATION-SUBJECT-ARTIFACT-MANIFEST", `${entityRef}.artifactSha256`, "Artifact digest does not match the file manifest"));
     }
   }
-  if (hardened && (!isObj(value.contracts) || !isObj(value.contracts.aimlock))) findings.push(finding("P0", "VALIDATION-SUBJECT-SNAPSHOT", `${entityRef}.contracts.aimlock`, "Hardened validation requires an Aimlock snapshot binding"));
-  if (value.contracts !== undefined && (!isObj(value.contracts)
-    || (value.contracts.aimlock !== undefined && (!isObj(value.contracts.aimlock)
-      || !idRegex.test(text(value.contracts.aimlock.goalId))
-      || !shaRegex.test(text(value.contracts.aimlock.scopeContractSha256))
-      || !shaRegex.test(text(value.contracts.aimlock.snapshotSha256))))
-    || (value.contracts.blueprint !== undefined && (!isObj(value.contracts.blueprint)
-      || !idRegex.test(text(value.contracts.blueprint.blueprintId))
-      || !shaRegex.test(text(value.contracts.blueprint.acceptanceReportSha256))))
-    || (value.contracts.archguard !== undefined && (!isObj(value.contracts.archguard)
-      || !shaRegex.test(text(value.contracts.archguard.contractSha256))
-      || !shaRegex.test(text(value.contracts.archguard.ledgerSha256))
-      || !["green", "yellow", "red"].includes(value.contracts.archguard.driftStatus))))) findings.push(finding("P0", "VALIDATION-SUBJECT-CONTRACTS", `${entityRef}.contracts`, "Aimlock, Blueprint, and ArchGuard bridge contracts require stable ids, SHA-256 digests, and a valid drift status"));
+  findings.push(...validateBridgeContracts(value, entityRef, hardened, { isObj, text, idRegex, shaRegex, finding }));
   if (Array.isArray(value.tests)) findings.push(...validateGoldenBaseline(value.goldenBaseline, `${entityRef}.goldenBaseline`, value.tests));
   try { canonicalJson(value); } catch (error) { findings.push(finding("P0", "VALIDATION-SUBJECT-JSON", entityRef, error instanceof Error ? error.message : "Invalid JSON")); }
   return findings.length ? { findings } : { value };

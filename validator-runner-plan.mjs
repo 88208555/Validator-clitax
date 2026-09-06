@@ -221,7 +221,29 @@ async function signerAuthority(root, signerConfigPath, policy) {
   return { ...file, config: { ...config, privateKeyPath: privatePath } }
 }
 
+async function verifyBrainControlAuthority(authority) {
+  if (authority.plan.contracts.brain === undefined) return
+  if (process.getuid() !== 0) throw new Error('Brain validation requires an isolated privileged runner')
+  const executable = await lstat(authority.plan.policy.executable)
+  if (executable.uid !== 0 || (executable.mode & 0o022) !== 0) throw new Error('Brain runner executable must be root owned and protected')
+  for (const name of authority.plan.policy.args) {
+    const parts = relativeFile(name).split('/')
+    let target = authority.root
+    for (const [index, part] of ['', ...parts].entries()) {
+      if (part) target = resolve(target, part)
+      const status = await lstat(target)
+      if (status.uid !== 0 || status.isSymbolicLink() || (status.mode & 0o022) !== 0) {
+        throw new Error('Brain runner control paths must be root owned and protected')
+      }
+      if (index === parts.length && (!status.isFile() || status.nlink !== 1 || (status.mode & 0o777) !== 0o600)) {
+        throw new Error('Brain runner controls require root owned mode-0600 regular files')
+      }
+    }
+  }
+}
+
 export async function verifyPlanFiles(authority) {
+  await verifyBrainControlAuthority(authority)
   let bytes = 0
   for (const file of authority.plan.files) {
     const actual = await projectFile(authority.root, file.path, false)

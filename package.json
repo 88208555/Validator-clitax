@@ -6,7 +6,9 @@
   "exports": {
     "./local-runner": "./validator-local-runner.mjs",
     "./runner-plan": "./validator-runner-plan.mjs",
-    "./runtime": "./validator-runtime.mjs"
+    "./runtime": "./validator-runtime.mjs",
+    "./brain-contract": "./brain-validator-contract.mjs",
+    "./brain-runner": "./brain-validator-plan.mjs"
   },
   "files": [
     "cli.mjs",
@@ -19,7 +21,11 @@
     "validator-local-runner.mjs",
     "validator-local-cli.mjs",
     "validator-runtime.mjs",
-    "validator-compliance.mjs"
+    "validator-compliance.mjs",
+    "brain-validator-contract.mjs",
+    "brain-validator-contract.d.mts",
+    "brain-validator-plan.mjs",
+    "validator-brain-contract.mjs"
   ],
   "license": "UNLICENSED",
   "name": "cli-validator",
@@ -28,5 +34,5 @@
     "url": "https://github.com/88208555/Validator-clitax.git"
   },
   "type": "module",
-  "version": "7.0.34"
+  "version": "7.0.35"
 }

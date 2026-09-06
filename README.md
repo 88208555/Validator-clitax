@@ -36,3 +36,40 @@ Brain Client 服务端在同一次 runtime 请求的事务中绑定真实响应�
 未配置 signer 时只返回 local TestEvidence，独立终审仍为 incomplete。可选 `validator.runner-signer/1.0` 配置包含外置 privateKeyPath、keyId（Ed25519 SPKI DER SHA-256）、receiptTtlMs（最长 10 分钟）；配置和私钥同样必须为外部 0600 文件。签名绑定 subject、退出结果与日志指纹，消费方使用已配置公钥核验。密钥配置不是进程隔离：同 UID 子进程可能读取同账户文件，生产可信服务仍须独立 UID/容器及权限隔离；本工具不自动部署隔离、不创建可信密钥，也不改变验证器的信任配置。
 
 本地运行仅支持 POSIX；无 shell、显式子进程环境、受限输出与时限。信号终止保留 exitCode=null，不制造整数退出码或成功 receipt。超时、输出超限、非零退出或运行中完整性变化均失败；原始执行记录与日志摘要可审计。此进程执行器不是 OS 沙箱，不授予任意磁盘或网络访问。
+
+## Brain planning verification
+
+IDE execution reports remain `reported` until a trusted runner verifies them. To prepare an execution plan from the server's complete report response:
+
+```sh
+cli-validator brain prepare /absolute/trusted-workspace report-response.json > prepared-runner.json
+```
+
+The trusted operator supplies the existing external, mode-0600 runner approval and signer configuration. The approval binds the exact `planSha256` printed by preparation. The runner input contains `reportResponse`, `approvalPath`, and `signerConfigPath`.
+
+```sh
+cli-validator brain run /absolute/trusted-workspace brain-runner-input.json > brain-validation.json
+cli-aimlock brain validate /absolute/ide-workspace brain-validation.json
+```
+
+Run this on a dedicated isolated runner, never on the production application host. Brain verification requires a privileged supervisor and executes the frozen checks as UID/GID 65534. The signing key, approved Node executable and runner controls remain protected and root owned. Frozen control files must be regular mode-0600 files; control directories must not be writable by the check process. Provide writable build-output directories separately when a check needs them. A Linux container supervisor needs SETUID, SETGID and KILL capabilities for identity separation and process-group cleanup. Do not mount a host Docker socket or production secrets.
+
+The fixed adapter executes every frozen check with `shell: false` and an explicit PATH. Its source and complete check manifest are included in the signed file manifest. The supervisor bounds the whole run to five minutes and one MiB of output. A failed, timed-out, modified or incomplete run cannot become `verified`.
+
+The API accepts `planId`, `reportDigest`, `executionPlan`, the runner's real `subject`, and `receipts`. It reconstructs and compares the member, plan, report, complete checks, files, adapter, frozen contract and policy before validating the signature. The server uses only the configured `CLITAX_VALIDATOR_RECEIPT_PUBLIC_KEY`, an Ed25519 SPKI DER public key encoded as base64. Test fixture keys must never be added to production trust.
+
+## Isolated integration verification
+
+The normal server test suite includes protocol, substitution, signature and unprivileged-runner rejection checks. The separate integration test runs real commands in a disposable root-to-unprivileged container:
+
+```sh
+docker run --rm --network none --read-only --cap-drop ALL \
+  --cap-add SETUID --cap-add SETGID --cap-add KILL \
+  --security-opt no-new-privileges --pids-limit 64 --memory 256m --cpus 1 \
+  --tmpfs /tmp:rw,nosuid,size=64m \
+  --mount type=bind,source=/absolute/source,target=/code,readonly \
+  --workdir /code node:24-alpine \
+  node --test scripts/brain-validator-isolated-integration.mjs
+```
+
+Use a source fixture containing only the needed first-party modules, not a directory containing environment files or credentials. The fixture generates a temporary signing key inside the disposable container and verifies that the unprivileged checks cannot read it.
