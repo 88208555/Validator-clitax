@@ -5,7 +5,7 @@ description: '交付前质量门禁：三道防线（静态/动态/对抗）递�
 
 # Validator
 
-Package version: v7.0.36
+Package version: v7.0.37
 
 Validator 是技能链最后一站，只消费冻结目标和真实执行证据；模型解释没有裁判权。
 
@@ -119,3 +119,9 @@ GoldenBaseline 只有 `frozen: true` 才有效。来源只允许 `repository-com
 未配置 signer 时只返回 local TestEvidence，独立终审仍为 incomplete。可选 `validator.runner-signer/1.0` 配置包含外置 privateKeyPath、keyId（Ed25519 SPKI DER SHA-256）、receiptTtlMs（最长 10 分钟）；配置和私钥同样必须为外部 0600 文件。签名绑定 subject、退出结果与日志指纹，消费方使用已配置公钥核验。密钥配置不是进程隔离：同 UID 子进程可能读取同账户文件，生产可信服务仍须独立 UID/容器及权限隔离；本工具不自动部署隔离、不创建可信密钥，也不改变验证器的信任配置。
 
 本地运行仅支持 POSIX；无 shell、显式子进程环境、受限输出与时限。信号终止保留 exitCode=null，不制造整数退出码或成功 receipt。超时、输出超限、非零退出或运行中完整性变化均失败；原始执行记录与日志摘要可审计。此进程执行器不是 OS 沙箱，不授予任意磁盘或网络访问。
+
+## 网络中断与原回执恢复
+
+仅在 TLS 握手前确定尚未发送 HTTP 请求时，broker 才允许最多 3 次连接尝试，并受总超时约束。请求发出后发生断线或响应中断，只用 GET 查询原 requestId 的服务端回执，禁止重发 POST；未取得有效回执时保留不确定状态，不得假定成功或继续依赖步骤。
+
+`npx cli-validator@latest recover <operation> <requestId>` 可重新查询原调用，不会重做操作或重复计费。链恢复不会跳过人工确认，也不会自动重跑结果不确定的本地命令。代理连接需 Node.js 22.21+ 或 24.5+；不支持的运行时会明确报错。
