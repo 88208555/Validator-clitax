@@ -6,7 +6,7 @@ const REQ = "validator.skill.request/1.0";
 const RES = "validator.skill.response/1.0";
 const ERR = "validator.skill.error/1.0";
 const NAME = "validator";
-const COMPILER_VERSION = "v7.0.38";
+const COMPILER_VERSION = "v7.0.39";
 const CATALOG_SCHEMA = "cli.tax.skill-catalog/1.0";
 const RECEIPT_SCHEMA = "validator.execution-receipt/1.0";
 const VALIDATION_SUBJECT_SCHEMA = "validator.validation-subject/1.0";
@@ -177,7 +177,7 @@ function validateGoldenBaseline(value, entityRef, tests) {
   if (!shaRegex.test(text(value.testsSha256)) || value.testsSha256 !== validatorReceiptSubject(tests)) findings.push(finding("P0", "GOLDEN-BASELINE-TESTS", `${entityRef}.testsSha256`, "Frozen tests digest does not match subject tests"));
   return findings;
 }
-function readValidationSubject(value, entityRef) {
+export function readValidationSubject(value, entityRef) {
   if (!isObj(value)) return { findings: [finding("P0", "VALIDATION-SUBJECT-REQUIRED", entityRef, "A validation subject is required")] };
   const findings = [];
   const allowed = new Set(["schemaVersion", "memberId", "chainId", "executedAt", "files", "artifactSha256", "validationRunId", "planId", "tests", "policy", "goldenBaseline", "contracts"]);
@@ -260,7 +260,7 @@ function createTestEvidence(receipt, subject, subjectDigest, index) {
     durationMs: receipt.result.durationMs, summary: receipt.result.summary, artifactSha256: subject.artifactSha256,
     subject, subjectDigest, receipt };
 }
-function evidenceState(evidence, subject, subjectDigest) {
+export function evidenceState(evidence, subject, subjectDigest) {
   if (!isObj(evidence) || evidence.schemaVersion !== TEST_EVIDENCE_SCHEMA || evidence.runner === "local") return "unverifiable";
   let evidenceDigest;
   try { evidenceDigest = validatorReceiptSubject(evidence.subject); } catch { return "unverifiable"; }
